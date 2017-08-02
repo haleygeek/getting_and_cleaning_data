@@ -1,0 +1,174 @@
+##  Getting and Cleaning Data Course Project
+##  Author: Haley E. Speed, PhD
+##  See README for more detailed overview of the script and adherence to Tidy Data principles
+##  See CodeBook for detailed information on variables and functions within the script
+
+library(dplyr)
+
+## 1. Merges the training and the test sets to create one data set.
+  
+        # Download training and test datasets in a zip archive
+        zipUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+        zipFilename <- "data.zip" 
+    
+                #Check to see if the file already exists
+                if (!file.exists(zipFilename)) { 
+                        download.file(zipUrl, zipfilename, method="auto") 
+                } else { "The zip file has already been downloaded." }
+
+        # Convert text files to tidy data
+                
+                # Read training data and test data text files into a strings 
+                # values are separated by a single space or double space
+                # Goal is to get the data into clean, comma-separated values
+                trainingFile <- readLines("data\\UCI HAR Dataset\\train\\X_train.txt")
+                testFile <- readLines("data\\UCI HAR Dataset\\test\\X_test.txt")
+        
+                # Removes leading whitespace from original data
+                trainingFile <- gsub("^\\s+", "", trainingFile)
+                testFile <- gsub("^\\s+", "",testFile)
+                
+                # Converts double spaces to commas
+                trainingFile <- gsub("\\s\\s", ",", trainingFile) 
+                testFile <- gsub("\\s", ",", testFile)  
+        
+                # Converts single spaces commas
+                trainingFile <- gsub(" ", ",", trainingFile) 
+                testFile <- gsub(",,", ",", testFile) 
+        
+                # Converts new comma-delimitted trainingFile and testFile strings to dataframes
+                # trainingFile: 7352 rows, 100 columns
+                # testFile: 2947 rows,100 columns 
+                trainingFile <- as.data.frame(read.table(textConnection(trainingFile), sep = ","))
+                testFile <- as.data.frame(read.table(textConnection(testFile), sep = ","))
+                
+        
+                # Read in coded activity labels for training data and test data into dataframes
+                trainingCodes <- read.delim2("data\\UCI HAR Dataset\\train\\y_train.txt", 
+                                              sep = "\n", quote = "\"", header = FALSE)
+                testCodes <- read.delim2("data\\UCI HAR Dataset\\test\\y_test.txt", 
+                                             sep = "\n", quote = "\"", header = FALSE)
+                
+                # Read in subject identifiers for training data and test data into dataframes
+                trainingSubject <- read.delim2("data\\UCI HAR Dataset\\train\\subject_train.txt", 
+                                               sep = "\n", quote = "\"", header = FALSE)
+                testSubject <- read.delim2("data\\UCI HAR Dataset\\test\\subject_test.txt", 
+                                              sep = "\n", quote = "\"", header = FALSE)
+                
+                # Bind subject identifiers and activity codes to the training and test datasets
+                trainingDataset <- data.frame(cbind(subject = trainingSubject, activityCode = trainingCodes, trainingFile))
+                testDataSet <- data.frame(cbind(subject = testSubject, activityCode = testCodes, testFile))
+                dim(trainingDataset)            # trainingFile: 7352 rows, 563 columns
+                dim(testDataset)                # testFile: 2947 rows, 563 columns 
+                
+                # Assign column names according to the features.txt file
+                # Regular expression "^[0-9]*" removes the first column of numbers in features.
+                colnames(trainingDataset) <-c("subject", "activityCode", 
+                                       gsub("^[0-9]*", "", readLines("data\\UCI HAR Dataset\\features.txt")))
+                colnames(testDataset) <-c("subject", "activityCode", 
+                                       gsub("^[0-9]*", "", readLines("data\\UCI HAR Dataset\\features.txt")))
+                
+                # Write complete tables to files
+                write.table(trainingDataset, file = "trainingDataset.csv", sep=",", col.names = TRUE)
+                write.table(testDataset, file = "testDataset.csv", sep = ",", col.names = TRUE)
+                
+        # Merge training and test datasets
+                
+                #Participant IDS  
+                unique(trainingDataset$subject)    # 1,3,5,6,7,8,11,14,15,16,17,19,21,22,23,25,26,27,28,29,30
+                unique(testDataSet$subject)     # 2,4,9,10,12,13,18,20,24
+                
+                # Merge() requires too much memory for two datasets this size
+                # Using r-bind for faster, more memory efficient merging since both datasets share
+                # the same structure and column names
+                # Merged table contains 10299 rows and 563 columns, as expected
+                mergedDataset <- rbind(trainingDataset, testDataSet)
+                dim(mergedDataset)
+                write.table(trainingDataset, file = "mergedDataset.csv", sep=",", col.names = TRUE)
+                
+                
+                
+
+## 2. Extracts only the measurements on the mean and standard deviation for each measurement.
+        
+        # use grepl() to subset the mergedDataset dataset, selecting columns with mean() or std() in their names
+        # and preserving the subject and activity code columns
+        # Used boundaries (/b) before and after "mean()" to get an exact match so that meanfreq() wasn't extractedDataset
+        # Resulting df (extractedDataset) has 10299 rows and 68 columns
+        extractedDataset <- mergedDataset[grepl ("subject", colnames(mergedDataset))|
+                            grepl ("activityCode", colnames(mergedDataset))|
+                            grepl ("\\bmean()\\b", colnames(mergedDataset))| 
+                            grepl ("std()", colnames(mergedDataset))]
+        dim(extractedDataset)
+                                    
+
+        
+## 3. Uses descriptive activity names to name the activities in the data set
+
+        # add a new column with labels for activity codes (activityname) using mutate()
+        # Populate new column with "case_when" option for mutate() according to the activity_labels.txt file
+        labeled <- mutate(extractedDataset, activityname = case_when(
+                          extractedDataset$activityCode == 1 ~ "WALKING", 
+                          extractedDataset$activityCode == 2 ~ "WALKING_UPSTAIRS",
+                          extractedDataset$activityCode == 3 ~ "WALKING_DOWNSTAIRS",
+                          extractedDataset$activityCode == 4 ~ "SITTING",
+                          extractedDataset$activityCode == 5 ~ "STANDING",
+                          extractedDataset$activityCode == 6 ~ "LAYING"))
+
+        
+## 4. Appropriately label the data set with descriptive variable names.
+        #i.e. tBodyAcc-XYZ			timeBodyAccelerationMeanXaxis
+        renameColumns <- function (variableName) {
+                          descriptiveVariableName <- gsub(" t", "time", variableName)
+                          descriptiveVariableName <- gsub(" f", "frequency", descriptiveVariableName)
+                          descriptiveVariableName <- gsub("Acc", "Accelerometer", descriptiveVariableName)
+                          descriptiveVariableName <- gsub("Gyro", "Gyroscope", descriptiveVariableName)
+                          descriptiveVariableName <- gsub("Mag", "Magnitude", descriptiveVariableName)
+                          descriptiveVariableName <- gsub("mean", "Mean", descriptiveVariableName)
+                          descriptiveVariableName <- gsub("std", "StandardDeviation", descriptiveVariableName)
+                          descriptiveVariableName <- gsub("X", "XAxis", descriptiveVariableName)
+                          descriptiveVariableName <- gsub("Y", "YAxis", descriptiveVariableName)
+                          descriptiveVariableName <- gsub("Z", "ZAxis", descriptiveVariableName)
+                          descriptiveVariableName <- gsub("-", "", descriptiveVariableName)
+                          descriptiveVariableName <- gsub("[()]", "", descriptiveVariableName)
+                          descriptiveVariableName <- gsub("BodyBody", "Body", fixed = TRUE, descriptiveVariableName)
+                          return (descriptiveVariableName)
+        }
+        
+        # Rename variable
+        renamedColumns <- sapply(colnames(labeled), renameColumns)
+        renamedColumns
+        colnames(labeled) <- renamedColumns
+
+# t = time
+# f = frequency
+# Acc = Accelerometer
+# -mean() = Mean
+# -X = Xaxis
+# -Y = Yaxis
+# -Z = Zaxis
+# grav = Gravity
+# Gyro = Gyroscope
+# Magnitude
+# -StandardDeviation
+# Body Body
+
+## 5. From the data set in step 4, creates a second, independent tidy data set 
+##    with the averagedDataset of each variable for each activity and each subject.
+
+        averagedDatasets <- aggregate(x = labeled[,3:68], 
+                      by = list(subject = labeled$subject, activity = labeled$activityname), 
+                      FUN = function (x) mean(as.numeric(as.character(x))))
+        
+        # averagedDatasets consists of 180 rows and 68 columns (activityCodes is dropped in this dataset) 
+        dim(averagedDatasets)
+        
+        # Write averagedDatasets to file
+        write.table(averagedDatasets, file = "averageDatasets.csv", sep=",", col.names = TRUE)
+        
+
+
+        
+
+
+
