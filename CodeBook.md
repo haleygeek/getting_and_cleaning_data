@@ -5,14 +5,14 @@ output: html_document
 
 <br>
 
-###BASIC INFORMATION    
+### BASIC INFORMATION    
 <hr>
 <b>Document:</b>   CodeBook.md<br>
 <b>Author:</b>   Haley Speed<br>
 <b>Github:</b>   https://github.com/haleygeek/getting_and_cleaning_data <br>
 <br>
 
-###DATA VARIABLES
+### DATA VARIABLES
 <hr>
 <b>Variables Inherited from Original Data</b>
 
@@ -93,7 +93,7 @@ activityName               Descriptive names of 6 activities analyzed in the ori
 </code></pre>
 <br> 
 
-###R SCRIPT VARIABLES
+### R SCRIPT VARIABLES
 <hr>
 <pre><code>
 averagedDatasets           Dataframe containing the average value of each feature (variable) mean and 
@@ -129,7 +129,7 @@ zipUrl                     Stores the web address for the zip file containing th
 </code></pre>
 <br>    
 
-###FUNCTIONS
+### FUNCTIONS
 <hr>
 <pre><code>
 describeActivity()        Renames activities in the data set using descriptive activity names.
@@ -145,7 +145,7 @@ renameColumns()           Appropriately labels the data set with descriptive var
 </code></pre>
 <br>  
 
-###SUMMARIES CALCULATED
+### SUMMARIES CALCULATED
 <hr>
 
 <b>Averaged dataset of each variable for each activity and each subject. </b> 
@@ -153,7 +153,7 @@ renameColumns()           Appropriately labels the data set with descriptive var
 The aggregate() function is used to find the mean of each mean and standard deviation of each feature (measurement) for each subject for each of the 6 activities. The input dataset, 'descriptiveActivityDataset', contains 69 rows. Column 1 contains subject data, Column 2 contains activity codes, Columns 3-68 contain feature data (mean or std of each feature), and Column 69 contains activity names. The aggregate() function is set up so that the mean of each feature mean or feature standard deviation is calculated with regard to the subject ID (Column 1) and width regard to the activity name (Column 69). The resulting dataframe contains 68 columns: Column 1 = subject identifiers, Column 2 = activity names, Columns 3:68 = mean or std feature data. Each row contains the mean of every mean feature measurement for 1 activity.
 <br>
 
-###DATA
+### DATA
 <hr>
 <pre><code>
 Activity Codes                # 1,2,3,4,5,6
@@ -170,7 +170,7 @@ averagedData                  Contains 180 rows and 68 columns
 </code></pre>
 <br>  
 
-###CALCULATIONS AND UNITS OF MEASUREMENT
+### CALCULATIONS AND UNITS OF MEASUREMENT
 <hr>
 <pre><code>
 Total Acceleration      The acceleration signal from the smartphone accelerometer X axis in standard 
@@ -183,7 +183,7 @@ Angular Velocity        The angular velocity vector measured by the gyroscope fo
 <br>  
 
 
-###TRANSFORMATIONS AND CLEANING STEPS
+### TRANSFORMATIONS AND CLEANING STEPS
 <hr>
 <b>Convert "X_train.txt" and "X_test.txt" files to tidy data.</b> 
 <br>
