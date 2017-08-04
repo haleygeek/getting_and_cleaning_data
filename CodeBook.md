@@ -231,8 +231,8 @@ Each of the original 562 variables is named according to the abbreviations:
 * -Z = Zaxis
 * grav = Gravity
 * Gyro = Gyroscope
-* Magnitude
-* -StandardDeviation
+* Mag = Magnitude
+* -std() = StandardDeviation
 
 so that the variable name, "tBodyAcc-mean()-X" could be read as the "mean body acceleration on the X axis in the time domain." The renameColumns() function expands these abbreviations into more descriptive column names. For the above example, the new name would be "timeBodyAccelerationMeanXAxis," where capitalization is used only to denote the first letter of a new desciptive term and to make the longer, descriptive names easier to read.
 
