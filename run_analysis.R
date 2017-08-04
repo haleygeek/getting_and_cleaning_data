@@ -154,7 +154,7 @@ library(dplyr)
         
         
 ## Write averagedDatasets to file for submission with code
-        write.table(averagedDatasets, file = "averageDatasets.csv", sep = ",", row.names = FALSE)
+        write.table(averagedDatasets, file = "averageDatasets.txt", row.names = FALSE)
         
 
         
